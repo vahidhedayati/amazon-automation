@@ -3,7 +3,7 @@
 
 #variables required for the instance creation ssh etc
 DEFAULT_SSH_USER="ec2-user"
-
+DEFAULT_INSTANCE_TYPE="t1.micro"
 
 # Your pem file to ssh in with keyname used for ec2-run
 keyName="vv"
@@ -17,17 +17,25 @@ WAIT_TIME=120;
 
 #return usage
 function usage () {
-  echo "$0 -u ubuntu -n instances -a \"httpd tomcat\" "
-	echo "$0 -u ec2-user -n 2 -a \"httpd tomcat\""
-	echo "where -a adds applications"
+  echo "$0 -u ubuntu -n instances -t instance_type -a \"httpd tomcat\" "|
+	echo "$0 -u ec2-user -n 2 -t m1.small -a \"httpd tomcat\""
+	echo "-- above will create 2 instances of m1.small"
+	echo "$0 -u ec2-user -n 2  -a \"httpd tomcat\""
+	echo "-- not -t sets default value of t1.micro"
+	echo "-- -a adds applications"
 	echo "default user is ec2-user no need to define -u if default required"
 }
 
 
 # This function creates the instances and returns the instance id finall gets the server name to pass to setjetty 
 function createinstances() { 
+
+	if [ "$INSTANCE_TYPE" == "" ]; then
+                INSTANCE_TYPE=$DEFAULT_INSTANCE_TYPE;
+        fi
+
 	for ((i=0; i < $INSTANCES; i++)) { 
-		INSTANCE_ID=$(ec2-run-instances -k $keyName -g $secGroup  -t t1.micro $ami | awk '/INSTANCE/{print $2}')
+		INSTANCE_ID=$(ec2-run-instances -k $keyName -g $secGroup  -t $INSTANCE_TYPE $ami | awk '/INSTANCE/{print $2}')
 		echo "created  $INSTANCE_ID waiting $WAIT_TIME seconds" 
 		sleep $WAIT_TIME
 
@@ -50,8 +58,9 @@ function installapps() {
 	echo "USER is $SSH_USER"
 
 	#ssh -t -o BatchMode=yes -o LogLevel=Error -l $SSH_USER $SERVER  sudo yum install -y $APPS
-	echo "ssh -t -i $keyLocation $SSH_USER@$SERVER -o StrictHostKeyChecking=no -C \"sudo yum install -y $APPS\""
-	ssh -t -i $keyLocation $SSH_USER@$SERVER -o StrictHostKeyChecking=no -C "sudo yum install -y $APPS"
+	COMMAND="ssh -t -i $keyLocation $SSH_USER@$SERVER -o StrictHostKeyChecking=no -C \"sudo yum install -y $APPS\""
+	echo $COMMAND
+	$(COMMAND)
 }
 
 ## Set the bash test case for input variables
@@ -76,7 +85,10 @@ while test -n "$1"; do
     		fi	
 		shift
             ;;
-
+	--itype|-t)
+		INSTANCE_TYPE=$2;
+		shift
+            ;;
         --apps|-a)
 		APPS=$2;
 		createinstances;
