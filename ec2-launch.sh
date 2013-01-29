@@ -41,7 +41,7 @@ function createinstances() {
 
 # This ssh's in to the box and gets the jetty file and installs it
 function installapps() { 
-	echo "sshing to server and running jetty get on  $SERVER"
+	echo "sshing to server and setting up defined rpms on  $SERVER"
 
 	## if user has not been define
 	if [ "$SSH_USER" == "" ]; then
@@ -77,7 +77,7 @@ while test -n "$1"; do
 		shift
             ;;
 
-        --jettyver|-j)
+        --apps|-a)
 		APPS=$2;
 		createinstances;
 		exit 0;
