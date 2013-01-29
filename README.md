@@ -6,7 +6,7 @@ Add on from above script
 
 Automate AWS server build
 
-You will need to export environment variables before runnign script
+You will need to export environment variables before running script
 
 AWS_ACCESS_KEY=
 
