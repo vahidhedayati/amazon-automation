@@ -9,7 +9,7 @@ DEFAULT_INSTANCE_TYPE="t1.micro"
 keyName="vv"
 keyLocation="./vv.pem"
 secGroup="sg-8c7e72e4"
-ami="ami-1624987f"
+DEFAULT_AMU_ID="ami-1624987f"
 
 # How many seconds to wait before sshing in
 WAIT_TIME=120;
@@ -17,10 +17,11 @@ WAIT_TIME=120;
 
 #return usage
 function usage () {
-  echo "$0 -u ubuntu -n instances -t instance_type -a \"httpd tomcat\" "|
-	echo "$0 -u ec2-user -n 2 -t m1.small -a \"httpd tomcat\""
+	echo "REFER TO http://aws.amazon.com/amazon-linux-ami/"
+  echo "$0 -u ubuntu -n instances -t instance_type -z singapore -s is32  -a \"httpd tomcat\" "|
+	echo "$0 -u ec2-user -n 2 -t m1.small -z oregon -s ebs64 -a \"httpd tomcat\""
 	echo "-- above will create 2 instances of m1.small"
-	echo "$0 -u ec2-user -n 2  -a \"httpd tomcat\""
+	echo "$0 -u ec2-user -n 2  -z ireland -s cgebs64  -a \"httpd tomcat\""
 	echo "-- not -t sets default value of t1.micro"
 	echo "-- -a adds applications"
 	echo "default user is ec2-user no need to define -u if default required"
@@ -34,8 +35,10 @@ function createinstances() {
                 INSTANCE_TYPE=$DEFAULT_INSTANCE_TYPE;
         fi
 
+	map_amu_id;
+
 	for ((i=0; i < $INSTANCES; i++)) { 
-		INSTANCE_ID=$(ec2-run-instances -k $keyName -g $secGroup  -t $INSTANCE_TYPE $ami | awk '/INSTANCE/{print $2}')
+		INSTANCE_ID=$(ec2-run-instances -k $keyName -g $secGroup  -t $INSTANCE_TYPE $AMU_ID | awk '/INSTANCE/{print $2}')
 		echo "created  $INSTANCE_ID waiting $WAIT_TIME seconds" 
 		sleep $WAIT_TIME
 
@@ -63,6 +66,58 @@ function installapps() {
 	$(COMMAND)
 }
 
+
+function map_amu_id() { 
+
+	if [ "$ZONE" == "" ]; then 
+		AMU_ID=$DEFAULT_AMU_ID;
+	else
+
+		declare -A virginia
+		virginia=([ebs32]=ami-1a249873 [ebs64]=ami-1624987f [is32]=ami-10249879 [is64]=ami-e8249881 [ccebs64]=ami-08249861 [cgebs64]=ami-02f54a6b)
+		declare -A oregon
+		oregon=([ebs32]=ami-2231bf12 [ebs64]=ami-2a31bf1a [is32]=ami-2c31bf1c [is64]=ami-2e31bf1e [ccebs64]=ami-2431bf14)
+		declare -A california
+		california=([ebs32]=ami-19f9de5c [ebs64]=ami-1bf9de5e [is32]=ami-27f9de62 [is64]=ami-21f9de64)
+		declare -A ireland
+		ireland=([ebs32]=ami-937474e7 [ebs64]=ami-c37474b7 [is32]=ami-cf7474bb [is64]=ami-b57474c1 [ccebs64]=ami-d97474ad [cgebs64]=ami-1b02026f)
+		declare -A singapore
+		singapore=([ebs32]=ami-a2a7e7f0 [ebs64]=ami-a6a7e7f4 [is32]=ami-aaa7e7f8 [is64]=ami-a8a7e7fa)
+		declare -A tokyo
+		tokyo=([ebs32]=ami-486cd349 [ebs64]=ami-4e6cd34f [is32]=ami-586cd359 [is64]=ami-5a6cd35b)
+		declare -A sydney
+		sydney=([ebs32]=ami-b3990e89 [ebs64]=ami-bd990e87 [is32]=ami-bf990e85 [is64]=ami-43990e79)
+		declare -A saopaolo
+		saopaolo=([ebs32]=ami-e209d0ff [ebs64]=ami-1e08d103 [is32]=ami-1a08d107 [is64]=ami-1608d10b)
+
+
+		if [[ $zone =~ virginia ]]; then
+			sid=${virginia[$mtype]}
+		elif  [[ $zone =~ oregon ]]; then
+        		sid=${oregon[$mtype]}
+		elif  [[ $zone =~ california ]]; then
+        		sid=${california[$mtype]}
+		elif  [[ $zone =~ ireland ]]; then
+        		sid=${ireland[$mtype]}
+		elif  [[ $zone =~ singapore ]]; then
+        		sid=${singapore[$mtype]}
+		elif  [[ $zone =~ tokyo ]]; then
+        		sid=${tokyo[$mtype]}
+		elif  [[ $zone =~ sydney ]]; then
+        		sid=${sydney[$mtype]}
+		elif  [[ $zone =~ saopaolo ]]; then
+        		sid=${saopaolo[$mtype]}
+		fi
+
+		if [ "$sid" == "" ]; then
+			AMU_ID=$DEFAULT_AMU_ID;
+		else
+			AMU_ID=$sid;
+		fi
+
+
+}
+
 ## Set the bash test case for input variables
 
 while test -n "$1"; do
@@ -88,12 +143,21 @@ while test -n "$1"; do
 	--itype|-t)
 		INSTANCE_TYPE=$2;
 		shift
+	     ;;	
+	--zone|-z)
+		ZONE=$2;
+		shift;
             ;;
+	--stype|-s)
+		STYPE=$2;
+		shift;
+	   ;;
         --apps|-a)
 		APPS=$2;
 		createinstances;
 		exit 0;
 	  ;;
+		
         *)
 		echo "Unknown argument: $1"
 	 	echo "-h for help";
@@ -107,3 +171,4 @@ if [ $# -eq 0 ]; then
         usage;
         exit 1;
 fi
+
