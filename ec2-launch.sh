@@ -92,21 +92,21 @@ function map_amu_id() {
 
 
 		if [[ $zone =~ virginia ]]; then
-			sid=${virginia[$mtype]}
+			sid=${virginia[$STYPE]}
 		elif  [[ $zone =~ oregon ]]; then
-        		sid=${oregon[$mtype]}
+        		sid=${oregon[$STYPE]}
 		elif  [[ $zone =~ california ]]; then
-        		sid=${california[$mtype]}
+        		sid=${california[$STYPE]}
 		elif  [[ $zone =~ ireland ]]; then
-        		sid=${ireland[$mtype]}
+        		sid=${ireland[$STYPE]}
 		elif  [[ $zone =~ singapore ]]; then
-        		sid=${singapore[$mtype]}
+        		sid=${singapore[$STYPE]}
 		elif  [[ $zone =~ tokyo ]]; then
-        		sid=${tokyo[$mtype]}
+        		sid=${tokyo[$STYPE]}
 		elif  [[ $zone =~ sydney ]]; then
-        		sid=${sydney[$mtype]}
+        		sid=${sydney[$STYPE]}
 		elif  [[ $zone =~ saopaolo ]]; then
-        		sid=${saopaolo[$mtype]}
+        		sid=${saopaolo[$STYPE]}
 		fi
 
 		if [ "$sid" == "" ]; then
